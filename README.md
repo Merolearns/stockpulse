@@ -82,7 +82,9 @@ pytest
 - `pandas` is in requirements.txt but nothing actually imports it yet — I kept
   the indicators pure-Python as the whole point of the exercise. It may earn
   its keep if I add a plotting script later.
-- No split/dividend adjustment detection beyond what Stooq already does.
+- No dividend adjustment beyond what Stooq already does. Splits get a
+  warning at download time: if an overnight close jumps more than 50%
+  (a split Stooq didn't adjust, or a bad tick) the CLI flags the date.
 - Single SQLite file, no concurrency handling — fine for one person, not for
   anything shared.
 - Things I'd add next: more indicators (MACD, Bollinger bands), a watchlist

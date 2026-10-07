@@ -1,6 +1,7 @@
 """Download daily OHLC bars from Stooq's free CSV endpoint."""
 
 import csv
+import warnings
 
 import requests
 
@@ -16,6 +17,25 @@ HEADERS = {
 
 class DownloadError(Exception):
     pass
+
+
+SPLIT_GAP_THRESHOLD = 0.5  # an overnight move bigger than this smells like a split
+
+
+def find_suspicious_gaps(rows, threshold=SPLIT_GAP_THRESHOLD):
+    """Return (date, prev_close, close) for overnight moves bigger than
+    `threshold`. Stooq adjusts history for splits, so these are rare —
+    usually a split that slipped through, or a bad tick. `rows` must be
+    oldest first."""
+    gaps = []
+    prev = None
+    for row in rows:
+        close = row["close"]
+        if prev and close:  # skip zeros to avoid dividing by zero
+            if abs(close - prev) / prev > threshold:
+                gaps.append((row["date"], prev, close))
+        prev = close
+    return gaps
 
 
 def normalize_symbol(symbol):
@@ -43,9 +63,6 @@ def fetch_csv(symbol):
         # instead of CSV. Nothing wrong with the request itself.
         raise DownloadError(f"no data for {sym} (check the ticker)")
 
-    # TODO: handle stock splits. Stooq adjusts history so usually this is
-    # fine, but a huge overnight gap vs the previous close means a split
-    # (or a bad tick) — worth flagging instead of silently swallowing.
     rows = []
     reader = csv.DictReader(text.splitlines())
     for row in reader:
@@ -62,6 +79,12 @@ def fetch_csv(symbol):
             continue  # skip malformed rows rather than dying on one bad line
     if not rows:
         raise DownloadError(f"no usable rows for {sym}")
+    for date, prev_close, close in find_suspicious_gaps(rows):
+        warnings.warn(
+            f"{sym}: {date} closed at {close:.2f} after {prev_close:.2f} "
+            "— possible stock split or bad tick",
+            stacklevel=2,
+        )
     return sym, rows
 
 
