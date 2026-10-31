@@ -67,6 +67,12 @@ def cmd_report(args):
     return 0
 
 
+def _cell(v):
+    # only None (not enough data) becomes an empty cell — a real 0.0,
+    # like rsi14 after a sustained slide, must survive as 0.0
+    return "" if v is None else v
+
+
 def cmd_export(args):
     sym = normalize_symbol(args.symbol)
     conn = connect(args.db)
@@ -88,7 +94,8 @@ def cmd_export(args):
         for i, r in enumerate(rows):
             w.writerow([r["date"], r["open"], r["high"], r["low"],
                         r["close"], r["volume"],
-                        s20[i] or "", s50[i] or "", e12[i] or "", r14[i] or ""])
+                        _cell(s20[i]), _cell(s50[i]),
+                        _cell(e12[i]), _cell(r14[i])])
     print(f"wrote {len(rows)} rows to {args.out}")
     return 0
 
