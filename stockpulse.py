@@ -25,6 +25,11 @@ def _fmt(v, width=8):
 
 
 def cmd_report(args):
+    if args.days < 1:
+        # sqlite treats a negative LIMIT as "no limit", so without this
+        # --days 0/-5 silently prints the whole history (or "no data")
+        print("error: --days must be at least 1", file=sys.stderr)
+        return 1
     sym = normalize_symbol(args.symbol)
     conn = connect(args.db)
     rows = get_prices(conn, sym, days=args.days)
