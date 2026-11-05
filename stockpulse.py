@@ -92,7 +92,13 @@ def cmd_export(args):
     e12 = ema(closes, 12)
     r14 = rsi(closes, 14)
 
-    with open(args.out, "w", newline="") as f:
+    try:
+        f = open(args.out, "w", newline="")
+    except OSError as e:
+        # a missing parent dir used to die with a bare traceback
+        print(f"error: can't write {args.out}: {e.strerror or e}", file=sys.stderr)
+        return 1
+    with f:
         w = csv.writer(f)
         w.writerow(["date", "open", "high", "low", "close", "volume",
                     "sma20", "sma50", "ema12", "rsi14"])

@@ -43,3 +43,14 @@ def test_export_no_data_is_error(tmp_path, capsys):
     args = argparse.Namespace(symbol="aapl", db=db, out=str(out))
     assert stockpulse.cmd_export(args) == 1
     assert "no data for aapl" in capsys.readouterr().out
+
+
+def test_export_unwritable_out_is_error(tmp_path, capsys):
+    # --out inside a directory that doesn't exist used to die with
+    # a bare traceback instead of a clean error
+    db = _seed(tmp_path, [100, 101, 102])
+    out = tmp_path / "nope" / "out.csv"
+    args = argparse.Namespace(symbol="aapl", db=db, out=str(out))
+    assert stockpulse.cmd_export(args) == 1
+    err = capsys.readouterr().err
+    assert "can't write" in err and "out.csv" in err
