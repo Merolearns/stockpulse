@@ -3,11 +3,17 @@
 
 import argparse
 import csv
+import sqlite3
 import sys
 
-from db import connect, get_prices
+from db import DEFAULT_DB, connect, get_prices
 from downloader import fetch, DownloadError, normalize_symbol
 from indicators import sma, ema, rsi, daily_returns, volatility
+
+
+def _db_error(path, e):
+    print(f"error: can't open database {path or DEFAULT_DB}: {e}", file=sys.stderr)
+    return 1
 
 
 def cmd_fetch(args):
@@ -16,6 +22,8 @@ def cmd_fetch(args):
     except DownloadError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+    except sqlite3.OperationalError as e:
+        return _db_error(args.db, e)
     print(f"{sym}: stored {n} daily bars")
     return 0
 
@@ -31,7 +39,10 @@ def cmd_report(args):
         print("error: --days must be at least 1", file=sys.stderr)
         return 1
     sym = normalize_symbol(args.symbol)
-    conn = connect(args.db)
+    try:
+        conn = connect(args.db)
+    except sqlite3.OperationalError as e:
+        return _db_error(args.db, e)
     rows = get_prices(conn, sym, days=args.days)
     conn.close()
     if not rows:
@@ -80,7 +91,10 @@ def _cell(v):
 
 def cmd_export(args):
     sym = normalize_symbol(args.symbol)
-    conn = connect(args.db)
+    try:
+        conn = connect(args.db)
+    except sqlite3.OperationalError as e:
+        return _db_error(args.db, e)
     rows = get_prices(conn, sym)
     conn.close()
     if not rows:
