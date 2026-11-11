@@ -3,6 +3,7 @@
 
 import argparse
 import csv
+import html
 import sqlite3
 import sys
 
@@ -66,21 +67,65 @@ def cmd_report(args):
     rets = daily_returns(closes)
     vol = volatility(closes, 20)
 
-    print()
-    print(f"last close: {closes[-1]:.2f}")
+    # collected so --html reuses the exact same lines
+    notes = [f"last close: {closes[-1]:.2f}"]
     if rets[-1] is not None:
-        print(f"last daily return: {rets[-1]:+.2%}")
+        notes.append(f"last daily return: {rets[-1]:+.2%}")
     if vol is not None:
-        print(f"20d annualized volatility: {vol:.2%}")
+        notes.append(f"20d annualized volatility: {vol:.2%}")
     if s50[-1] is not None:
         trend = "above" if closes[-1] > s50[-1] else "below"
-        print(f"price is {trend} its 50-day average ({s50[-1]:.2f})")
+        notes.append(f"price is {trend} its 50-day average ({s50[-1]:.2f})")
     if r14[-1] is not None:
         if r14[-1] > 70:
-            print(f"rsi14 at {r14[-1]:.1f} — overbought territory")
+            notes.append(f"rsi14 at {r14[-1]:.1f} — overbought territory")
         elif r14[-1] < 30:
-            print(f"rsi14 at {r14[-1]:.1f} — oversold territory")
+            notes.append(f"rsi14 at {r14[-1]:.1f} — oversold territory")
+    print()
+    print("\n".join(notes))
+
+    out = getattr(args, "html", None)  # older callers build Namespaces without it
+    if out:
+        try:
+            f = open(out, "w", encoding="utf-8")
+        except OSError as e:
+            print(f"error: can't write {out}: {e.strerror or e}", file=sys.stderr)
+            return 1
+        with f:
+            f.write(
+                _html_report(
+                    args.symbol.upper(), rows, [closes, s20, s50, e12, r14], notes
+                )
+            )
+        print(f"wrote {len(rows)} rows to {out}")
     return 0
+
+
+_CSS = """body{font-family:system-ui,sans-serif;margin:2rem;color:#222}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:.25rem .75rem;text-align:right;border-bottom:1px solid #ddd}
+th:first-child,td:first-child{text-align:left}"""
+
+
+def _html_report(symbol, rows, cols, notes):
+    sym = html.escape(symbol)
+    head = "".join(
+        f"<th>{h}</th>" for h in ("date", "close", "sma20", "sma50", "ema12", "rsi14")
+    )
+    body = "\n".join(
+        f"<tr><td>{html.escape(r['date'])}</td>"
+        + "".join(f"<td>{_fmt(c[i]).strip()}</td>" for c in cols)
+        + "</tr>"
+        for i, r in enumerate(rows)
+    )
+    items = "".join(f"<li>{html.escape(n)}</li>" for n in notes)
+    return (
+        '<!doctype html>\n<html><head><meta charset="utf-8">'
+        f"<title>{sym} report</title><style>{_CSS}</style></head><body>\n"
+        f"<h1>{sym} — daily bars ending {html.escape(rows[-1]['date'])}</h1>\n"
+        f"<table><thead><tr>{head}</tr></thead><tbody>\n{body}\n</tbody></table>\n"
+        f"<ul>{items}</ul>\n</body></html>\n"
+    )
 
 
 def _cell(v):
@@ -141,6 +186,9 @@ def main(argv=None):
     r.add_argument("--db", default=argparse.SUPPRESS)
     r.add_argument("symbol")
     r.add_argument("--days", type=int, default=30, help="days to show (default 30)")
+    r.add_argument(
+        "--html", metavar="PATH", help="also write a self-contained html report to PATH"
+    )
     r.set_defaults(func=cmd_report)
 
     e = sub.add_parser("export", help="export bars + indicators to csv")

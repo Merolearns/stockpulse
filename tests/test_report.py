@@ -36,3 +36,26 @@ def test_report_honors_days(tmp_path, capsys):
     assert "2026-10-30" in out
     assert "2026-10-26" in out
     assert "2026-10-25" not in out
+
+
+def test_report_writes_html(tmp_path, capsys):
+    db = _seed(tmp_path, [100 + i for i in range(30)])
+    out = tmp_path / "report.html"
+    args = argparse.Namespace(symbol="aapl", db=db, days=5, html=str(out))
+    assert stockpulse.cmd_report(args) == 0
+    page = out.read_text()
+    assert "AAPL" in page
+    assert "2026-10-30" in page
+    assert "<th>sma20</th>" in page
+    assert "last close: 129.00" in page
+    assert f"wrote 5 rows to {out}" in capsys.readouterr().out
+
+
+def test_report_html_missing_dir(tmp_path, capsys):
+    db = _seed(tmp_path, [100] * 30)
+    bad = tmp_path / "nope" / "report.html"
+    args = argparse.Namespace(symbol="aapl", db=db, days=5, html=str(bad))
+    assert stockpulse.cmd_report(args) == 1
+    err = capsys.readouterr().err
+    assert f"error: can't write {bad}" in err
+    assert "Traceback" not in err

@@ -31,6 +31,13 @@ Print a report of the last 30 days with indicators:
 python stockpulse.py report aapl --days 30
 ```
 
+Add `--html PATH` to also write the same table and summary as a single
+self-contained HTML page (inline CSS, nothing external):
+
+```bash
+python stockpulse.py report aapl --days 30 --html aapl_report.html
+```
+
 Export full history plus indicators to CSV:
 
 ```bash
