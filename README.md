@@ -44,6 +44,17 @@ Export full history plus indicators to CSV:
 python stockpulse.py export aapl --out aapl_indicators.csv
 ```
 
+Browse the same reports in the browser instead of the terminal:
+
+```bash
+python web.py
+```
+
+then open http://127.0.0.1:5000 — the home page lists every tracked symbol
+with its latest close, and each symbol links to the same indicator report
+the CLI prints (same numbers, same table, served as a page). `STOCKPULSE_DB`
+points the dashboard at a different database, like `--db` does for the CLI.
+
 All data lives in `stockpulse.db` next to the script. Use `--db /path/to/file.db`
 with any command to point at a different database.
 
@@ -70,6 +81,7 @@ price is above its 50-day average (242.20)
 ## How it's organized
 
 - `stockpulse.py` — CLI entry point (argparse): `fetch`, `report`, `export`
+- `web.py` — Flask dashboard: symbol list plus the same indicator report as a page
 - `downloader.py` — fetches Stooq CSV, handles HTTP errors / empty responses
 - `db.py` — sqlite3 schema and helpers (upsert by symbol+date)
 - `indicators.py` — sma/ema/rsi/daily_returns/volatility, all hand-rolled

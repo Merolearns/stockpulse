@@ -33,41 +33,25 @@ def _fmt(v, width=8):
     return f"{v:>{width}.2f}" if v is not None else " " * width
 
 
-def cmd_report(args):
-    if args.days < 1:
-        # sqlite treats a negative LIMIT as "no limit", so without this
-        # --days 0/-5 silently prints the whole history (or "no data")
-        print("error: --days must be at least 1", file=sys.stderr)
-        return 1
-    sym = normalize_symbol(args.symbol)
-    try:
-        conn = connect(args.db)
-    except sqlite3.OperationalError as e:
-        return _db_error(args.db, e)
-    rows = get_prices(conn, sym, days=args.days)
-    conn.close()
+def report_data(conn, symbol, days):
+    """Indicator report for a symbol, or None when the db has no bars for it.
+
+    Returns the rows, the per-bar indicator columns, and the plain-English
+    summary notes — the same numbers cmd_report prints and _html_report
+    renders, computed once here so both stay in sync.
+    """
+    rows = get_prices(conn, symbol, days=days)
     if not rows:
-        print(f"no data for {args.symbol} — run `fetch {args.symbol}` first")
-        return 1
+        return None
 
     closes = [r["close"] for r in rows]
     s20, s50 = sma(closes, 20), sma(closes, 50)
     e12 = ema(closes, 12)
     r14 = rsi(closes, 14)
 
-    print(f"{args.symbol.upper()} — daily bars ending {rows[-1]['date']}")
-    print(f"{'date':<12}{'close':>8}{'sma20':>8}{'sma50':>8}{'ema12':>8}{'rsi14':>8}")
-    for i, r in enumerate(rows):
-        print(
-            f"{r['date']:<12}"
-            f"{_fmt(closes[i])}{_fmt(s20[i])}{_fmt(s50[i])}"
-            f"{_fmt(e12[i])}{_fmt(r14[i])}"
-        )
-
     rets = daily_returns(closes)
     vol = volatility(closes, 20)
 
-    # collected so --html reuses the exact same lines
     notes = [f"last close: {closes[-1]:.2f}"]
     if rets[-1] is not None:
         notes.append(f"last daily return: {rets[-1]:+.2%}")
@@ -81,8 +65,48 @@ def cmd_report(args):
             notes.append(f"rsi14 at {r14[-1]:.1f} — overbought territory")
         elif r14[-1] < 30:
             notes.append(f"rsi14 at {r14[-1]:.1f} — oversold territory")
+
+    return {
+        "symbol": symbol,
+        "rows": rows,
+        "closes": closes,
+        "sma20": s20,
+        "sma50": s50,
+        "ema12": e12,
+        "rsi14": r14,
+        "notes": notes,
+    }
+
+
+def cmd_report(args):
+    if args.days < 1:
+        # sqlite treats a negative LIMIT as "no limit", so without this
+        # --days 0/-5 silently prints the whole history (or "no data")
+        print("error: --days must be at least 1", file=sys.stderr)
+        return 1
+    sym = normalize_symbol(args.symbol)
+    try:
+        conn = connect(args.db)
+    except sqlite3.OperationalError as e:
+        return _db_error(args.db, e)
+    data = report_data(conn, sym, args.days)
+    conn.close()
+    if data is None:
+        print(f"no data for {args.symbol} — run `fetch {args.symbol}` first")
+        return 1
+
+    rows = data["rows"]
+    print(f"{args.symbol.upper()} — daily bars ending {rows[-1]['date']}")
+    print(f"{'date':<12}{'close':>8}{'sma20':>8}{'sma50':>8}{'ema12':>8}{'rsi14':>8}")
+    for i, r in enumerate(rows):
+        print(
+            f"{r['date']:<12}"
+            f"{_fmt(data['closes'][i])}{_fmt(data['sma20'][i])}{_fmt(data['sma50'][i])}"
+            f"{_fmt(data['ema12'][i])}{_fmt(data['rsi14'][i])}"
+        )
+
     print()
-    print("\n".join(notes))
+    print("\n".join(data["notes"]))
 
     out = getattr(args, "html", None)  # older callers build Namespaces without it
     if out:
@@ -94,7 +118,11 @@ def cmd_report(args):
         with f:
             f.write(
                 _html_report(
-                    args.symbol.upper(), rows, [closes, s20, s50, e12, r14], notes
+                    args.symbol.upper(),
+                    rows,
+                    [data["closes"], data["sma20"], data["sma50"],
+                     data["ema12"], data["rsi14"]],
+                    data["notes"],
                 )
             )
         print(f"wrote {len(rows)} rows to {out}")
