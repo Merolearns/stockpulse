@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stockpulse — Daily stock bars and indicators</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <h1>stockpulse</h1>
+  <p class="subtitle">Daily stock bars and hand-rolled indicators — fetched from Stooq, stored in SQLite</p>
+</header>
+
+<main>
+  <section class="panel">
+    <form method="post" action="{{ url_for('fetch_symbol') }}">
+      <div class="form-row">
+        <label>Ticker symbol
+          <input type="text" name="ticker" placeholder="e.g. aapl" autocomplete="off">
+        </label>
+        <button type="submit">Fetch latest bars</button>
+      </div>
+    </form>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  </section>
+
+  {% if tracked %}
+  <section class="symbol-grid">
+    {% for t in tracked %}
+    <a class="symbol-card" href="{{ url_for('report', symbol=t.symbol) }}">
+      <span class="symbol-name">{{ t.symbol.upper() }}</span>
+      <span class="symbol-meta">{{ t.bars }} bars stored</span>
+      <span class="symbol-meta">last bar {{ t.last_date }}</span>
+      <span class="symbol-close">{{ "%.2f"|format(t.last_close) }}</span>
+      <span class="symbol-link">View report</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% else %}
+  <section class="panel">
+    <p>No symbols tracked yet.</p>
+    <p class="hint">Type a ticker above and hit "Fetch latest bars", or run
+    <code>python stockpulse.py fetch aapl</code> from the terminal, then
+    reload this page.</p>
+  </section>
+  {% endif %}
+
+  <p class="footer-note">A personal learning project. Nothing here is financial advice.</p>
+</main>
+</body>
+</html>

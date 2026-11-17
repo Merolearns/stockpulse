@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ symbol }} — stockpulse report</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <h1><a href="{{ url_for('index') }}">stockpulse</a> / {{ symbol }}</h1>
+  <p class="subtitle">Daily bars ending {{ last_date }}</p>
+</header>
+
+<main>
+  <section class="stats">
+    <div class="card"><span class="stat-value">{{ stats.last_close }}</span><span class="stat-label">Last close</span></div>
+    <div class="card"><span class="stat-value">{{ stats.last_return }}</span><span class="stat-label">Last daily return</span></div>
+    <div class="card"><span class="stat-value">{{ stats.volatility }}</span><span class="stat-label">20d annualized volatility</span></div>
+    <div class="card"><span class="stat-value">{{ stats.rsi }}{% if stats.rsi_label %} <span class="rsi-label {{ stats.rsi_label }}">{{ stats.rsi_label }}</span>{% endif %}</span><span class="stat-label">RSI14</span></div>
+    <div class="card"><span class="stat-value">{{ stats.vs_avg if stats.vs_avg else "—" }}</span><span class="stat-label">Price vs 50-day average</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Price chart
+      <span class="legend">
+        <span class="swatch close"></span> close
+        <span class="swatch sma20"></span> SMA20
+        <span class="swatch sma50"></span> SMA50
+      </span>
+      <span class="days-selector">
+        {% for d in days_options %}
+        <a href="{{ url_for('report', symbol=symbol.lower()) }}?days={{ d }}" {% if d == days %}class="active"{% endif %}>{{ d }}d</a>
+        {% endfor %}
+      </span>
+    </h2>
+    {{ chart|safe }}
+  </section>
+
+  <section class="panel">
+    <h2>Indicators</h2>
+    <table>
+      <thead><tr><th>date</th><th>close</th><th>sma20</th><th>sma50</th><th>ema12</th><th>rsi14</th></tr></thead>
+      <tbody>
+        {% for row in table %}
+        <tr>
+          <td>{{ row.date }}</td>
+          <td>{{ row.close }}</td>
+          <td>{{ row.sma20 }}</td>
+          <td>{{ row.sma50 }}</td>
+          <td>{{ row.ema12 }}</td>
+          <td>{{ row.rsi14 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="hint">Cells show "—" where there isn't enough history yet for that indicator.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Summary</h2>
+    <ul>
+      {% for note in notes %}
+      <li>{{ note }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <p class="footer-note">A personal learning project. Nothing here is financial advice.</p>
+</main>
+</body>
+</html>

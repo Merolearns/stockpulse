@@ -1,0 +1,141 @@
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  background: #f4f6f8;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.site-header {
+  background: #111827;
+  color: #fff;
+  padding: 2rem 1.5rem 1.5rem;
+}
+
+.site-header h1 { margin: 0; font-size: 1.9rem; }
+.site-header h1 a { color: #fff; text-decoration: none; }
+.site-header h1 a:hover { text-decoration: underline; }
+.subtitle { margin: 0.25rem 0 0; color: #9ca3af; }
+
+main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+
+.panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.panel h2 { margin-top: 0; font-size: 1.15rem; }
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+label { font-size: 0.9rem; font-weight: 600; }
+label input {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+button:hover { background: #1d4ed8; }
+
+.error { color: #b91c1c; font-weight: 600; }
+.hint { color: #6b7280; font-size: 0.9rem; }
+code { background: #f3f4f6; padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value { font-size: 1.5rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; color: #6b7280; }
+
+.rsi-label { font-size: 0.85rem; font-weight: 600; text-transform: capitalize; }
+.rsi-label.overbought { color: #b91c1c; }
+.rsi-label.oversold { color: #b45309; }
+.rsi-label.neutral { color: #6b7280; }
+
+.symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.symbol-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+.symbol-card:hover { border-color: #2563eb; }
+
+.symbol-name { font-size: 1.25rem; font-weight: 700; }
+.symbol-meta { font-size: 0.85rem; color: #6b7280; }
+.symbol-close { font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; }
+.symbol-link { font-size: 0.85rem; color: #2563eb; margin-top: 0.25rem; }
+
+.chart { width: 100%; height: auto; }
+.close-line { fill: none; stroke: #2563eb; stroke-width: 2; }
+.sma20-line { fill: none; stroke: #9ca3af; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.sma50-line { fill: none; stroke: #059669; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.gridline { stroke: #e5e7eb; stroke-width: 1; }
+.axis-label { font-size: 12px; fill: #6b7280; }
+
+.legend { font-size: 0.85rem; font-weight: 400; color: #6b7280; margin-left: 0.5rem; }
+.swatch { display: inline-block; width: 14px; height: 4px; vertical-align: middle; margin: 0 0.2rem 0 0.6rem; }
+.swatch.close { background: #2563eb; }
+.swatch.sma20 { background: #9ca3af; }
+.swatch.sma50 { background: #059669; }
+
+.days-selector { float: right; font-size: 0.85rem; font-weight: 400; }
+.days-selector a {
+  color: #6b7280;
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+.days-selector a:hover { background: #f3f4f6; }
+.days-selector a.active { background: #2563eb; color: #fff; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid #e5e7eb; }
+th { color: #6b7280; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+td:nth-child(n+2), th:nth-child(n+2) { text-align: right; }
+
+.footer-note { color: #6b7280; font-size: 0.85rem; text-align: center; }
