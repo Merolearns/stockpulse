@@ -50,10 +50,17 @@ Browse the same reports in the browser instead of the terminal:
 python web.py
 ```
 
-then open http://127.0.0.1:5000 — the home page lists every tracked symbol
-with its latest close, and each symbol links to the same indicator report
-the CLI prints (same numbers, same table, served as a page). `STOCKPULSE_DB`
-points the dashboard at a different database, like `--db` does for the CLI.
+then open http://127.0.0.1:5000. The home page has a fetch form — type a
+ticker like `aapl` and hit "Fetch latest bars" — plus a card for each
+tracked symbol showing how many bars are stored, the last bar's date, and
+its close. Clicking a card opens that symbol's report page: five stat cards
+(last close, last daily return, 20d annualized volatility, RSI14 with an
+overbought/oversold/neutral label, and price vs its 50-day average), a
+price chart with the SMA20 and SMA50 lines, a 30/60/90-day selector, and
+the same indicator table the CLI prints. The numbers come from the same
+`report_data()` the CLI uses, so the page and the terminal can never drift
+apart. `STOCKPULSE_DB` points the dashboard at a different database, like
+`--db` does for the CLI.
 
 All data lives in `stockpulse.db` next to the script. Use `--db /path/to/file.db`
 with any command to point at a different database.
@@ -81,7 +88,8 @@ price is above its 50-day average (242.20)
 ## How it's organized
 
 - `stockpulse.py` — CLI entry point (argparse): `fetch`, `report`, `export`
-- `web.py` — Flask dashboard: symbol list plus the same indicator report as a page
+- `web.py` — Flask dashboard (`templates/` + `static/style.css`): fetch form,
+  symbol cards, and report pages with stat cards and an SVG price chart
 - `downloader.py` — fetches Stooq CSV, handles HTTP errors / empty responses
 - `db.py` — sqlite3 schema and helpers (upsert by symbol+date)
 - `indicators.py` — sma/ema/rsi/daily_returns/volatility, all hand-rolled
