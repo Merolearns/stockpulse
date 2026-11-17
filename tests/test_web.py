@@ -78,6 +78,8 @@ def test_report_unknown_symbol_404(client):
 def test_report_bad_days_400(client):
     assert client.get("/report/aapl?days=0").status_code == 400
     assert client.get("/report/aapl?days=abc").status_code == 400
+    assert client.get("/report/aapl?days=366").status_code == 400
+    assert client.get("/report/aapl?days=365").status_code == 200
 
 
 def test_index_shows_fetch_form(client):

@@ -21,6 +21,10 @@ app = Flask(__name__)
 
 DAYS_OPTIONS = (30, 60, 90)
 
+# a report page renders every bar as a table row and a chart point, so
+# cap the window at a year — ?days=100000 used to dump the whole history
+DAYS_MAX = 365
+
 
 def _db_path():
     # env override so tests can point at a throwaway db without touching
@@ -196,6 +200,8 @@ def report(symbol):
         return "days must be a whole number", 400
     if days < 1:
         return "days must be at least 1", 400
+    if days > DAYS_MAX:
+        return f"days must be at most {DAYS_MAX}", 400
 
     conn = connect(_db_path())
     try:
