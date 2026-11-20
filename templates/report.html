@@ -40,7 +40,7 @@
   <section class="panel">
     <h2>Indicators</h2>
     <table>
-      <thead><tr><th>date</th><th>close</th><th>sma20</th><th>sma50</th><th>ema12</th><th>rsi14</th></tr></thead>
+      <thead><tr><th>date</th><th>close</th><th>sma20</th><th>sma50</th><th>ema12</th><th>rsi14</th><th>macd</th><th>signal</th><th>hist</th></tr></thead>
       <tbody>
         {% for row in table %}
         <tr>
@@ -50,6 +50,9 @@
           <td>{{ row.sma50 }}</td>
           <td>{{ row.ema12 }}</td>
           <td>{{ row.rsi14 }}</td>
+          <td>{{ row.macd }}</td>
+          <td>{{ row.macd_signal }}</td>
+          <td>{{ row.macd_hist }}</td>
         </tr>
         {% endfor %}
       </tbody>

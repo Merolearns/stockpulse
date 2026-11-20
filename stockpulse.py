@@ -9,7 +9,7 @@ import sys
 
 from db import DEFAULT_DB, connect, get_prices
 from downloader import fetch, DownloadError, normalize_symbol
-from indicators import sma, ema, rsi, daily_returns, volatility
+from indicators import sma, ema, rsi, macd, daily_returns, volatility
 
 
 def _db_error(path, e):
@@ -48,6 +48,7 @@ def report_data(conn, symbol, days):
     s20, s50 = sma(closes, 20), sma(closes, 50)
     e12 = ema(closes, 12)
     r14 = rsi(closes, 14)
+    m_line, m_sig, m_hist = macd(closes)
 
     rets = daily_returns(closes)
     vol = volatility(closes, 20)
@@ -65,6 +66,9 @@ def report_data(conn, symbol, days):
             notes.append(f"rsi14 at {r14[-1]:.1f} — overbought territory")
         elif r14[-1] < 30:
             notes.append(f"rsi14 at {r14[-1]:.1f} — oversold territory")
+    if m_hist[-1] is not None:
+        # histogram above zero means the MACD line sits above its signal
+        notes.append(f"macd histogram at {m_hist[-1]:+.2f}")
 
     return {
         "symbol": symbol,
@@ -74,6 +78,9 @@ def report_data(conn, symbol, days):
         "sma50": s50,
         "ema12": e12,
         "rsi14": r14,
+        "macd": m_line,
+        "macd_signal": m_sig,
+        "macd_hist": m_hist,
         "notes": notes,
     }
 

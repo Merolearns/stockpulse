@@ -225,6 +225,9 @@ def report(symbol):
             "sma50": _fmt(data["sma50"][i]),
             "ema12": _fmt(data["ema12"][i]),
             "rsi14": _fmt(data["rsi14"][i]),
+            "macd": _fmt(data["macd"][i]),
+            "macd_signal": _fmt(data["macd_signal"][i]),
+            "macd_hist": _fmt(data["macd_hist"][i]),
         }
         for i, r in enumerate(rows)
     ]

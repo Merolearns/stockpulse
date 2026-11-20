@@ -75,6 +75,37 @@ def rsi(values, n=14):
     return out
 
 
+def macd(values, fast=12, slow=26, signal=9):
+    """MACD line, signal line, and histogram.
+
+    The line is fast EMA minus slow EMA; the signal is an EMA of the
+    line. Returns three lists the same length as the input, None where
+    there isn't enough data yet — the line starts once the slow EMA
+    does, the signal `signal - 1` bars after that.
+    """
+    if fast <= 0 or slow <= 0 or signal <= 0:
+        raise ValueError("periods must be positive")
+    fast_ema, slow_ema = ema(values, fast), ema(values, slow)
+    line = [None] * len(values)
+    for i, (f, s) in enumerate(zip(fast_ema, slow_ema)):
+        if f is not None and s is not None:
+            line[i] = f - s
+    compact = [v for v in line if v is not None]
+    sig = [None] * len(values)
+    if compact:
+        # ema() seeds with the SMA of the first `signal` line values,
+        # so map its output back onto the original positions
+        seeded = ema(compact, signal)
+        first = len(values) - len(compact)
+        for j, v in enumerate(seeded):
+            sig[first + j] = v
+    hist = [
+        (l - s) if l is not None and s is not None else None
+        for l, s in zip(line, sig)
+    ]
+    return line, sig, hist
+
+
 def daily_returns(closes):
     out = [None] * len(closes)
     for i in range(1, len(closes)):

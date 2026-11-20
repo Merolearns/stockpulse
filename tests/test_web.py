@@ -132,3 +132,7 @@ def test_report_page_has_chart_and_stat_cards(tmp_path, monkeypatch):
     assert "RSI14" in html
     assert "20d annualized volatility" in html
     assert "30d" in html and "60d" in html and "90d" in html
+    # MACD columns render in the indicators table
+    assert "<th>macd</th>" in html
+    assert "<th>signal</th>" in html
+    assert "<th>hist</th>" in html

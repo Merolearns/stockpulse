@@ -3,7 +3,7 @@ import statistics
 
 import pytest
 
-from indicators import sma, ema, rsi, daily_returns, volatility
+from indicators import sma, ema, rsi, macd, daily_returns, volatility
 
 
 def test_sma_basic():
@@ -66,3 +66,41 @@ def test_volatility_matches_manual_calc():
 def test_volatility_too_few_bars():
     assert volatility([100], n=20) is None      # no returns at all
     assert volatility([100, 101], n=20) is None  # only one return, can't stddev it
+
+
+def test_macd_flat_trend():
+    # straight line 1..10, fast=2 slow=3 signal=2: both EMAs lag the same
+    # way, so the line is a constant 0.5 once the slow EMA starts
+    line, sig, hist = macd(list(range(1, 11)), fast=2, slow=3, signal=2)
+    assert line == [None, None] + [0.5] * 8
+    # the signal needs `signal` line values before its first value, so it
+    # starts one bar after the line
+    assert sig == [None, None, None] + [0.5] * 7
+    assert hist == [None, None, None] + [0.0] * 7
+
+
+def test_macd_known_values():
+    # closes 100,102,101,103,105,104 with fast=2 slow=3 signal=2,
+    # worked out by hand from the ema() definition above
+    line, sig, hist = macd([100, 102, 101, 103, 105, 104], fast=2, slow=3, signal=2)
+    assert line[0] is None and line[1] is None
+    assert line[2:] == pytest.approx([0.0, 0.3333, 0.6111, 0.2870], abs=1e-3)
+    assert sig[:3] == [None, None, None]
+    assert sig[3:] == pytest.approx([0.1667, 0.4630, 0.3457], abs=1e-3)
+    assert hist[:3] == [None, None, None]
+    assert hist[3:] == pytest.approx([0.1667, 0.1481, -0.0587], abs=1e-3)
+
+
+def test_macd_not_enough_data():
+    # fewer bars than the slow period: nothing to compute yet
+    line, sig, hist = macd([100, 101, 102], fast=2, slow=5, signal=2)
+    assert line == [None, None, None]
+    assert sig == [None, None, None]
+    assert hist == [None, None, None]
+
+
+def test_macd_rejects_bad_period():
+    with pytest.raises(ValueError):
+        macd([1, 2, 3], fast=0, slow=3, signal=2)
+    with pytest.raises(ValueError):
+        macd([1, 2, 3], fast=2, slow=3, signal=-1)
