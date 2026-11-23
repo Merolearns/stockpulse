@@ -37,6 +37,23 @@ def test_export_keeps_real_zero_rsi(tmp_path):
     assert rows[0]["rsi14"] == ""
 
 
+def test_export_includes_macd_columns(tmp_path):
+    # the export used to stop at rsi14 — MACD landed in the report and
+    # the web table in Nov 20 but never made it into the CSV
+    closes = [100 + i for i in range(40)]
+    db = _seed(tmp_path, closes)
+    out = tmp_path / "out.csv"
+    args = argparse.Namespace(symbol="aapl", db=db, out=str(out))
+    assert stockpulse.cmd_export(args) == 0
+    with open(out) as f:
+        rows = list(csv.DictReader(f))
+    assert "macd" in rows[0] and "macd_signal" in rows[0] and "macd_hist" in rows[0]
+    assert rows[0]["macd"] == ""  # not enough history yet (slow EMA needs 26)
+    assert rows[-1]["macd"] != ""  # populated on the last bar
+    assert rows[-1]["macd_signal"] != ""
+    assert rows[-1]["macd_hist"] != ""
+
+
 def test_export_no_data_is_error(tmp_path, capsys):
     db = _seed(tmp_path, [])
     out = tmp_path / "out.csv"

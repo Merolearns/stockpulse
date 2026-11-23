@@ -185,6 +185,7 @@ def cmd_export(args):
     s20, s50 = sma(closes, 20), sma(closes, 50)
     e12 = ema(closes, 12)
     r14 = rsi(closes, 14)
+    m_line, m_sig, m_hist = macd(closes)
 
     try:
         f = open(args.out, "w", newline="")
@@ -195,12 +196,14 @@ def cmd_export(args):
     with f:
         w = csv.writer(f)
         w.writerow(["date", "open", "high", "low", "close", "volume",
-                    "sma20", "sma50", "ema12", "rsi14"])
+                    "sma20", "sma50", "ema12", "rsi14",
+                    "macd", "macd_signal", "macd_hist"])
         for i, r in enumerate(rows):
             w.writerow([r["date"], r["open"], r["high"], r["low"],
                         r["close"], r["volume"],
                         _cell(s20[i]), _cell(s50[i]),
-                        _cell(e12[i]), _cell(r14[i])])
+                        _cell(e12[i]), _cell(r14[i]),
+                        _cell(m_line[i]), _cell(m_sig[i]), _cell(m_hist[i])])
     print(f"wrote {len(rows)} rows to {args.out}")
     return 0
 
