@@ -79,6 +79,9 @@ def fetch_csv(symbol):
             continue  # skip malformed rows rather than dying on one bad line
     if not rows:
         raise DownloadError(f"no usable rows for {sym}")
+    # Stooq serves newest first; everything downstream (gap warnings,
+    # storage, indicators) reads oldest first, so flip it here
+    rows.sort(key=lambda r: r["date"])
     for date, prev_close, close in find_suspicious_gaps(rows):
         warnings.warn(
             f"{sym}: {date} closed at {close:.2f} after {prev_close:.2f} "

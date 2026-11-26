@@ -49,3 +49,28 @@ def test_threshold_is_configurable():
 def test_zero_close_skipped_not_crash():
     assert find_suspicious_gaps(_rows(0, 100)) == []
     assert find_suspicious_gaps(_rows(100, 0)) == []
+
+
+def test_fetch_csv_returns_oldest_first(monkeypatch):
+    # Stooq serves newest first — fetch_csv promises oldest first, and
+    # the split warning names the wrong date if the order isn't flipped
+    import downloader
+
+    stooq_csv = (
+        "Date,Open,High,Low,Close,Volume\n"
+        "2026-10-03,25,25,25,25,1000\n"
+        "2026-10-02,99,99,99,99,1000\n"
+        "2026-10-01,100,100,100,100,1000\n"
+    )
+
+    class FakeResp:
+        text = stooq_csv
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(downloader.requests, "get", lambda *a, **k: FakeResp())
+    with pytest.warns(UserWarning, match="2026-10-03 closed at 25.00 after 99.00"):
+        sym, rows = downloader.fetch_csv("aapl")
+    assert sym == "aapl.us"
+    assert [r["date"] for r in rows] == ["2026-10-01", "2026-10-02", "2026-10-03"]
